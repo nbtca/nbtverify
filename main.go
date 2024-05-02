@@ -11,97 +11,186 @@ import (
 )
 
 var mobile = true
+var cfg *config.Config
 
-type OnlineStatus int
+func login(address string) (*nbtverify.OnlineDetail, error) {
+	v, err := nbtverify.Login(address, nbtverify.LoginInfo{
+		Username: cfg.Username,
+		Password: cfg.Password,
+		AsMobile: mobile,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if v.Success {
+		fmt.Println("login success")
+	} else {
+		fmt.Println("login failed:", v.Message)
+	}
+	detail, err := v.GetDetail()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("-----------------Detail-----------------")
+	fmt.Println("Welcome:\t", detail.Welcome)
+	fmt.Println("Account:\t", detail.Account)
+	fmt.Println("UserName:\t", detail.UserName)
+	fmt.Println("MAC:\t", detail.UserMac)
+	fmt.Println("UserIP:\t", detail.UserIP)
+	fmt.Println("DeviceIP:\t", detail.DeviceIP)
+	fmt.Println("IsMacFastAuth:\t", detail.IsMacFastAuth)
+	fmt.Println("-----------------End-----------------")
+	return detail, nil
 
-const (
-	AlreadyOnline OnlineStatus = iota
-	Offline
-	LoginSuccess
-	LoginFailed
-)
-
-func login(cfg *config.Config, force bool) (OnlineStatus, error) {
+}
+func loadBaseUrl(force bool) (bool, *string, error) {
 	find, address, err := nbtverify.GetBaseLoginUrl(mobile)
 	if err != nil {
-		return LoginFailed, err
+		return find, nil, err
 	}
 	if !find {
 		if !force {
-			return AlreadyOnline, nil
+			return find, nil, nil
 		}
 		if cfg.CacheFile == "" {
-			return AlreadyOnline, nil
+			return find, nil, nil
 		}
 		if err := utils.FileNotExists(cfg.CacheFile); err != nil {
-			return AlreadyOnline, nil
+			return find, nil, nil
 		}
 		// get base url from file
 		bytes, err := os.ReadFile(cfg.CacheFile)
 		if err != nil {
-			return AlreadyOnline, nil
+			return find, nil, nil
 		}
 		address = string(bytes)
 	}
 	if cfg.CacheFile != "" {
 		if err := utils.FileNotExists(cfg.CacheFile); err != nil {
-			return LoginFailed, err
+			return find, nil, err
 		}
 		// save base url to file
 		if err := os.WriteFile(cfg.CacheFile, []byte(address), 0644); err != nil {
-			return LoginFailed, err
+			return find, nil, err
 		}
 	}
-	fmt.Println("found login base url:", address)
-	info := nbtverify.LoginInfo{
-		Username: cfg.Username,
-		Password: cfg.Password,
-		AsMobile: mobile,
-	}
-	v, err := nbtverify.Login(address, info)
-	if err != nil {
-		return LoginFailed, err
-	}
-	fmt.Println("login result:", v)
-	detail, err := v.GetDetail()
-	if err != nil {
-		return LoginFailed, err
-	}
-	fmt.Println("detail", *detail)
-	result, err := detail.Logout()
-	if err != nil {
-		return LoginFailed, err
-	}
-	fmt.Println("result", result.Message)
-	return LoginSuccess, nil
+	return find, &address, nil
 }
 
 var (
 	configPath string
+	times      int
+	force      bool
 )
 
 func init() {
 	flag.StringVar(&configPath, "c", "config.json", "path of config file")
+	flag.IntVar(&times, "t", 1, "retry times if login failed")
+	flag.BoolVar(&force, "f", false, "force login use url from cache file")
 }
 func main() {
 	flag.Parse()
+	action := flag.Arg(0)
 	if configPath == "config.json" {
 		fmt.Println("use default config path: config.json")
 	}
-	cfg, err := config.LoadConfig(configPath)
+	cfgload, err := config.LoadConfig(configPath)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	switch status, err := login(cfg, false); status {
-	case AlreadyOnline:
-		fmt.Println("already online")
-	case Offline:
-		fmt.Println("offline")
-	case LoginSuccess:
-		fmt.Println("login success")
-	case LoginFailed:
-		fmt.Println("login failed")
+	cfg = cfgload
+	find, baseUrl, err := loadBaseUrl(false)
+	if err != nil {
 		fmt.Println(err)
+		return
+	}
+	if baseUrl != nil {
+		fmt.Println("get login base url:", baseUrl)
+	}
+	//match action
+	if action == "login" || action == "" {
+		if !find && !force {
+			fmt.Println("Already online. Tips: use '-f' to get status or 'logout' to logout.")
+			return
+		}
+		if baseUrl == nil {
+			if !force {
+				fmt.Println("base url not found, please use -f to force login use url from cache file")
+				return
+			}
+			_, baseUrlFromCache, err := loadBaseUrl(true)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			baseUrl = baseUrlFromCache
+		}
+		for i := 0; i < times; i++ {
+			login(*baseUrl)
+		}
+	} else if action == "logout" {
+		if baseUrl == nil {
+			_, baseUrlFromCache, err := loadBaseUrl(true)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			baseUrl = baseUrlFromCache
+		}
+		detail, err := login(*baseUrl)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for i := 0; i < times; i++ {
+			result, err := detail.Logout()
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("logout success")
+				fmt.Println(result.Message)
+			}
+		}
+	} else if action == "relogin" {
+		if baseUrl == nil {
+			_, baseUrlFromCache, err := loadBaseUrl(true)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			baseUrl = baseUrlFromCache
+		}
+		for i := 0; i < times; i++ {
+			detail, err := login(*baseUrl)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			detail.Logout()
+			login(*baseUrl)
+		}
+	} else if action == "flogin" {
+		if baseUrl == nil {
+			_, baseUrlFromCache, err := loadBaseUrl(true)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			baseUrl = baseUrlFromCache
+		}
+		detail, err := login(*baseUrl)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		detail.Logout()
+		for i := 0; i < times; i++ {
+			login(*baseUrl)
+		}
+		detail.Logout()
+	} else {
+		fmt.Println("unknown action: " + action)
+		fmt.Println("avaliable actions: login logout relogin")
 	}
 }

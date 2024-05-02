@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	urllib "net/url"
@@ -25,7 +24,7 @@ func setHeader(req *http.Request, mobile bool, referer string, cookies ...*http.
 	req.Header.Add("Accept-Language", "en-US,en;q=0.9")
 }
 func RequestPostForm(url string, body map[string]string, mobile bool) ([]byte, []*http.Cookie, error) {
-	fmt.Println("RequestPostForm:", url)
+	// fmt.Println("RequestPostForm:", url)
 	// fmt.Println("Start---POST Form---")
 	// for k, v := range form {
 	// 	fmt.Println(k, " : ", v)
@@ -60,7 +59,7 @@ func RequestPostForm(url string, body map[string]string, mobile bool) ([]byte, [
 }
 
 func RequestPost(url string, body interface{}, mobile bool) ([]byte, error) {
-	fmt.Println("RequestPost:", url)
+	// fmt.Println("RequestPost:", url)
 	// 创建一个新的请求
 	json, err := json.Marshal(body)
 	if err != nil {
@@ -91,7 +90,7 @@ func RequestGet(url string, mobile bool) ([]byte, error) {
 	return RequestGetReferer(url, mobile, "")
 }
 func RequestGetReferer(url string, mobile bool, referer string, cookies ...*http.Cookie) ([]byte, error) {
-	fmt.Println("RequestGet:", url)
+	// fmt.Println("RequestGet:", url)
 	// 创建一个新的请求
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

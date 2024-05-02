@@ -64,7 +64,7 @@ type OnlineDetail struct {
 	UserIP        string
 	UserMac       string
 	UserName      string
-	DeviceIp      string
+	DeviceIP      string
 	IsMacFastAuth bool
 	mobile        bool
 }
@@ -101,7 +101,7 @@ func (result *LoginResult) GetDetail() (*OnlineDetail, error) {
 		UserIP:        form["userIp"],
 		UserMac:       utils.ConvertMac(form["userMac"]),
 		UserName:      form["userName"],
-		DeviceIp:      form["deviceIp"],
+		DeviceIP:      form["deviceIp"],
 		IsMacFastAuth: form["isMacFastAuth"] == "true",
 		mobile:        result.mobile,
 		logoutUrl:     logoutUrl,
