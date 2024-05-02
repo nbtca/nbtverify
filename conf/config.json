@@ -1,0 +1,10 @@
+{
+    //账号
+    "username": "学号",
+    //密码
+    "password": "密码",
+    //模拟移动端
+    "mobile": true,
+    //登录的URL缓存文件
+    "cache": "url.txt"
+}
