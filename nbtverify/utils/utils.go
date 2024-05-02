@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	urllib "net/url"
 	"os"
 	"strings"
@@ -86,7 +85,6 @@ func RemoveComments(bytes []byte) []byte {
 		}
 		result = append(result, bytes[i])
 	}
-	fmt.Println(string(result))
 	return result
 }
 func FileNotExists(path string) error {
