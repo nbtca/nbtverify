@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	urllib "net/url"
 	"os"
 	"strings"
@@ -63,26 +64,29 @@ func ChangeUrlPath(url string, path string) (string, error) {
 
 func RemoveComments(bytes []byte) []byte {
 	var result []byte
-	l := len(bytes) - 1
-	for i := 0; i < l; i++ {
+	length := len(bytes)
+	for i := 0; i < length; i++ {
 		if bytes[i] == '/' {
-			if bytes[i+1] == '/' {
-				i++
-				for i < l && bytes[i+1] != '\n' {
+			if i < length-1 {
+				if bytes[i+1] == '/' {
 					i++
-				}
-				continue
-			} else if bytes[i+1] == '*' {
-				i += 2
-				for i < l && bytes[i] != '*' && bytes[i+1] != '/' {
+					for i < length-1 && bytes[i+1] != '\n' {
+						i++
+					}
+					continue
+				} else if bytes[i+1] == '*' {
+					i += 2
+					for i < length-1 && bytes[i] != '*' && bytes[i+1] != '/' {
+						i++
+					}
 					i++
+					continue
 				}
-				i++
-				continue
 			}
 		}
 		result = append(result, bytes[i])
 	}
+	fmt.Println(string(result))
 	return result
 }
 func FileNotExists(path string) error {
