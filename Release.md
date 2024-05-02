@@ -6,3 +6,5 @@
 - 解压后，`chmod +x nbtverify`，然后执行`./nbtverify`即可。
 - 可通过`./nbtverify -h`查看帮助信息。
 - 可通过`./nbtverify -c /root/config.json`指定配置文件(登录信息)路径。
+- 不使用`config.json`
+  - 也可通过`./nbtverify -u 用户名 -p 密码`指定用户名和密码。

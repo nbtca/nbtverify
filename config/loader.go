@@ -7,16 +7,15 @@ import (
 	"github.com/nbtca/zportal-web-verify/nbtverify/utils"
 )
 
-func LoadConfig(path string) (*Config, error) {
+func LoadConfig(path string, cfg *Config) error {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	cfg := &Config{}
 	bytes = utils.RemoveComments(bytes)
 	err = json.Unmarshal(bytes, cfg)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return cfg, nil
+	return nil
 }
