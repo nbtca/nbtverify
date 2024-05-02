@@ -167,7 +167,13 @@ func main() {
 				fmt.Println(err)
 				return
 			}
-			detail.Logout()
+			result, err := detail.Logout()
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("logout success")
+				fmt.Println(result.Message)
+			}
 			login(*baseUrl)
 		}
 	} else if action == "flogin" {
