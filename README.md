@@ -14,7 +14,7 @@ NBT校园网认证 (卓智网络接入门户)
 
 ## 配置文件
 
-```json
+```jsonc
 {
     "username": "学号",
     "password": "密码",
