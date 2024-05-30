@@ -30,7 +30,9 @@ func GetBaseLoginUrl(mobile bool) (bool, string, error) {
 		if start == -1 || end == -1 {
 			return false, "", fmt.Errorf("can't find url in response data: %s", str)
 		}
-		return true, str[start+1 : end], nil
+		urlRaw := str[start+1 : end]
+		fixUrl := strings.ReplaceAll(urlRaw, " ", "")
+		return true, fixUrl, nil
 	} else {
 		return false, "", nil
 	}

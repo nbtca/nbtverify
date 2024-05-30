@@ -125,7 +125,7 @@ func main() {
 		return nil
 	}
 	if baseUrl != nil {
-		fmt.Println("get login base url:", baseUrl)
+		fmt.Println("get login base url:", *baseUrl)
 	}
 	//match action
 	if action == "login" || action == "" {
