@@ -22,3 +22,6 @@ NBT校园网认证 (卓智网络接入门户)
     "cache": "url.txt"//缓存文件(保存认证使用的url到文件)
 }
 ```
+
+## For OpenWrt/LEDE/immortalwrt
+[luci-app-nbtverify](https://github.com/nbtca/luci-app-nbtverify)

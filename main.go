@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/nbtca/zportal-web-verify/config"
 	"github.com/nbtca/zportal-web-verify/nbtverify"
@@ -76,6 +77,32 @@ func loadBaseUrl(force bool) (bool, *string, error) {
 	}
 	return find, &address, nil
 }
+func service() {
+	for {
+		find, baseUrl, err := loadBaseUrl(false)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("error occurs, sleep 30s.")
+			time.Sleep(30 * time.Second)
+			continue
+		}
+		if find {
+			// offline and got login url
+			if baseUrl != nil {
+				detail, err := login(*baseUrl)
+				if err != nil {
+					fmt.Println(err)
+				}
+				if detail != nil {
+					// success
+					time.Sleep(10 * time.Millisecond)
+					continue
+				}
+			}
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
 
 var (
 	configPath string
@@ -105,6 +132,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+	}
+	if action == "service" {
+		service()
+		return
 	}
 	find, baseUrl, err := loadBaseUrl(false)
 	if err != nil {
