@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/nbtca/zportal-web-verify/nbtverify/utils"
+	"github.com/nbtca/nbtverify/nbtverify/utils"
 )
 
 func GetBaseLoginUrl(mobile bool) (bool, string, error) {
@@ -50,25 +50,25 @@ type LoginInfo struct {
 }
 
 type LoginResult struct {
-	AlreadyOnline bool
-	Success       bool
-	Message       string
-	NextPage      string
-	baseUrl       string
-	cookies       []*http.Cookie
-	mobile        bool
+	AlreadyOnline bool           `json:"alreadyOnline"`
+	Success       bool           `json:"success"`
+	Message       string         `json:"message"`
+	NextPage      string         `json:"nextPage"`
+	BaseUrl       string         `json:"baseUrl"`
+	Cookies       []*http.Cookie `json:"cookies"`
+	Mobile        bool           `json:"mobile"`
 }
 type OnlineDetail struct {
-	Welcome       string
-	Account       string
-	logoutUrl     string
-	form          map[string]string
-	UserIP        string
-	UserMac       string
-	UserName      string
-	DeviceIP      string
-	IsMacFastAuth bool
-	mobile        bool
+	Welcome       string            `json:"welcome"`
+	Account       string            `json:"account"`
+	LogoutUrl     string            `json:"logoutUrl"`
+	Form          map[string]string `json:"form"`
+	UserIP        string            `json:"userIp"`
+	UserMac       string            `json:"userMac"`
+	UserName      string            `json:"userName"`
+	DeviceIP      string            `json:"deviceIp"`
+	IsMacFastAuth bool              `json:"isMacFastAuth"`
+	Mobile        bool              `json:"mobile"`
 }
 type LogoutResult struct {
 	mobile  bool
@@ -76,7 +76,7 @@ type LogoutResult struct {
 }
 
 func (result *LoginResult) GetDetail() (*OnlineDetail, error) {
-	bytes, err := utils.RequestGetReferer(result.NextPage, result.mobile, result.baseUrl, result.cookies...)
+	bytes, err := utils.RequestGetReferer(result.NextPage, result.Mobile, result.BaseUrl, result.Cookies...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (result *LoginResult) GetDetail() (*OnlineDetail, error) {
 		return nil, err
 	}
 	return &OnlineDetail{
-		form:          form,
+		Form:          form,
 		Welcome:       welcome,
 		Account:       account,
 		UserIP:        form["userIp"],
@@ -105,12 +105,12 @@ func (result *LoginResult) GetDetail() (*OnlineDetail, error) {
 		UserName:      form["userName"],
 		DeviceIP:      form["deviceIp"],
 		IsMacFastAuth: form["isMacFastAuth"] == "true",
-		mobile:        result.mobile,
-		logoutUrl:     logoutUrl,
+		Mobile:        result.Mobile,
+		LogoutUrl:     logoutUrl,
 	}, nil
 }
 func (status *OnlineDetail) Logout() (*LogoutResult, error) {
-	res, _, err := utils.RequestPostForm(status.logoutUrl, status.form, status.mobile)
+	res, _, err := utils.RequestPostForm(status.LogoutUrl, status.Form, status.Mobile)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (status *OnlineDetail) Logout() (*LogoutResult, error) {
 		"body > div.box_mod > div.zhxx_box > span", //pc
 	)
 	return &LogoutResult{
-		mobile:  status.mobile,
+		mobile:  status.Mobile,
 		Message: message,
 	}, nil
 }
@@ -166,9 +166,9 @@ func invokeLogin(baseUrl string, form map[string]string, mobile bool) (*LoginRes
 		Success:       result.Result == "success",
 		Message:       result.Message,
 		NextPage:      url.String(),
-		baseUrl:       baseUrl,
-		cookies:       cookies,
-		mobile:        mobile,
+		BaseUrl:       baseUrl,
+		Cookies:       cookies,
+		Mobile:        mobile,
 	}, nil
 }
 func Login(baseUrl string, info LoginInfo) (*LoginResult, error) {

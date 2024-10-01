@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/nbtca/zportal-web-verify/config"
-	"github.com/nbtca/zportal-web-verify/nbtverify"
-	"github.com/nbtca/zportal-web-verify/nbtverify/utils"
+	"github.com/nbtca/nbtverify/config"
+	"github.com/nbtca/nbtverify/nbtverify"
+	"github.com/nbtca/nbtverify/nbtverify/utils"
 )
 
 var mobile = true
@@ -32,15 +32,25 @@ func login(address string) (*nbtverify.OnlineDetail, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("-----------------Detail-----------------")
-	fmt.Println("Welcome:\t", detail.Welcome)
-	fmt.Println("Account:\t", detail.Account)
-	fmt.Println("UserName:\t", detail.UserName)
-	fmt.Println("MAC:\t", detail.UserMac)
-	fmt.Println("UserIP:\t", detail.UserIP)
-	fmt.Println("DeviceIP:\t", detail.DeviceIP)
-	fmt.Println("IsMacFastAuth:\t", detail.IsMacFastAuth)
-	fmt.Println("-----------------End-----------------")
+	if cfg.StatusFile != "" {
+		data := map[string]interface{}{
+			"result": *v,
+			"detail": *detail,
+		}
+		if err := utils.SaveJson(cfg.StatusFile, data); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Println("-----------------Detail-----------------")
+		fmt.Println("Welcome:\t", detail.Welcome)
+		fmt.Println("Account:\t", detail.Account)
+		fmt.Println("UserName:\t", detail.UserName)
+		fmt.Println("MAC:\t", detail.UserMac)
+		fmt.Println("UserIP:\t", detail.UserIP)
+		fmt.Println("DeviceIP:\t", detail.DeviceIP)
+		fmt.Println("IsMacFastAuth:\t", detail.IsMacFastAuth)
+		fmt.Println("-----------------End-----------------")
+	}
 	return detail, nil
 
 }
@@ -117,6 +127,7 @@ func init() {
 	flag.StringVar(&cfg.Username, "u", "", "username")
 	flag.StringVar(&cfg.Password, "p", "", "password")
 	flag.StringVar(&cfg.CacheFile, "url", "url.txt", "cache file path")
+	flag.StringVar(&cfg.StatusFile, "s", "", "status json file path")
 	flag.BoolVar(&mobile, "mobile", true, "use mobile login")
 }
 

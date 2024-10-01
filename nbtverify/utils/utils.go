@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	urllib "net/url"
 	"os"
 	"strings"
@@ -95,4 +96,15 @@ func FileNotExists(path string) error {
 		}
 	}
 	return nil
+}
+
+func SaveJson(path string, data interface{}) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "    ")
+	return encoder.Encode(data)
 }

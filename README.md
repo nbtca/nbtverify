@@ -1,13 +1,13 @@
-# zportal-web-verify
+# nbtverify
 NBT校园网认证 (卓智网络接入门户)
 
 ## 使用
 
 ```shell
-./zportal-web-verify -h
+./nbtverify -h
 ```
 > ```
-> Usage of zportal-web-verify:
+> Usage of nbtverify:
 >   -c string
 >         path of config file (default "config.json")
 > ```

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/nbtca/zportal-web-verify/nbtverify/utils"
+	"github.com/nbtca/nbtverify/nbtverify/utils"
 )
 
 func LoadConfig(path string, cfg *Config) error {

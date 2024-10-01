@@ -1,4 +1,4 @@
-module github.com/nbtca/zportal-web-verify
+module github.com/nbtca/nbtverify
 
 go 1.21.2
 
