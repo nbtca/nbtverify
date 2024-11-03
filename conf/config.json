@@ -1,10 +1,14 @@
 {
     //账号
-    "username": "学号",
+    "username": "your_account",
     //密码
-    "password": "密码",
+    "password": "your_password",
     //模拟移动端
     "mobile": true,
+    //输出状态信息json到文件（留空忽略）
+    "status": "",
+    //测试连接使用的URL（可留空）
+    "ping_url": "http://baidu.com",
     //登录的URL缓存文件
     "cache": "url.txt"
 }

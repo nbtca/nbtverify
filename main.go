@@ -14,6 +14,8 @@ import (
 var mobile = true
 var cfg *config.Config = new(config.Config)
 
+const defaultPingUrl = "http://10.80.92.85/"
+
 func login(address string) (*nbtverify.OnlineDetail, error) {
 	v, err := nbtverify.Login(address, nbtverify.LoginInfo{
 		Username: cfg.Username,
@@ -55,7 +57,7 @@ func login(address string) (*nbtverify.OnlineDetail, error) {
 
 }
 func loadBaseUrl(force bool) (bool, *string, error) {
-	find, address, err := nbtverify.GetBaseLoginUrl(mobile)
+	find, address, err := nbtverify.GetBaseLoginUrl(cfg.PingUrl, mobile)
 	if err != nil {
 		return find, nil, err
 	}
@@ -129,6 +131,7 @@ func init() {
 	flag.StringVar(&cfg.CacheFile, "url", "url.txt", "cache file path")
 	flag.StringVar(&cfg.StatusFile, "s", "", "status json file path")
 	flag.BoolVar(&mobile, "mobile", true, "use mobile login")
+	flag.StringVar(&cfg.PingUrl, "ping", defaultPingUrl, "ping url")
 }
 
 func main() {

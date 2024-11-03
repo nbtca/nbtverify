@@ -6,4 +6,5 @@ type Config struct {
 	AsMobile   bool   `json:"mobile"`
 	CacheFile  string `json:"cache"`
 	StatusFile string `json:"status"`
+	PingUrl    string `json:"ping_url"`
 }

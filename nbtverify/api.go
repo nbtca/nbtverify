@@ -11,8 +11,8 @@ import (
 	"github.com/nbtca/nbtverify/nbtverify/utils"
 )
 
-func GetBaseLoginUrl(mobile bool) (bool, string, error) {
-	data, err := utils.RequestGet("http://10.80.92.85/", mobile)
+func GetBaseLoginUrl(testUrl string, mobile bool) (bool, string, error) {
+	data, err := utils.RequestGet(testUrl, mobile)
 	if err != nil {
 		return false, "", err
 	}
