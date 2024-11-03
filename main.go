@@ -57,7 +57,11 @@ func login(address string) (*nbtverify.OnlineDetail, error) {
 
 }
 func loadBaseUrl(force bool) (bool, *string, error) {
-	find, address, err := nbtverify.GetBaseLoginUrl(cfg.PingUrl, mobile)
+	testUrl := cfg.PingUrl
+	if testUrl == "" {
+		testUrl = defaultPingUrl
+	}
+	find, address, err := nbtverify.GetBaseLoginUrl(testUrl, mobile)
 	if err != nil {
 		return find, nil, err
 	}
