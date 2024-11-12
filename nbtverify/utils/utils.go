@@ -65,8 +65,12 @@ func ChangeUrlPath(url string, path string) (string, error) {
 func RemoveComments(bytes []byte) []byte {
 	var result []byte
 	length := len(bytes)
+	inString := false
 	for i := 0; i < length; i++ {
-		if bytes[i] == '/' {
+		if bytes[i] == '"' {
+			inString = !inString
+		}
+		if !inString && bytes[i] == '/' {
 			if i < length-1 {
 				if bytes[i+1] == '/' {
 					i++
@@ -76,7 +80,7 @@ func RemoveComments(bytes []byte) []byte {
 					continue
 				} else if bytes[i+1] == '*' {
 					i += 2
-					for i < length-1 && bytes[i] != '*' && bytes[i+1] != '/' {
+					for i < length-1 && !(bytes[i] == '*' && bytes[i+1] == '/') {
 						i++
 					}
 					i++

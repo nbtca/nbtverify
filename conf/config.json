@@ -8,7 +8,7 @@
     //输出状态信息json到文件（留空忽略）
     "status": "",
     //测试连接使用的URL（可留空）
-    "ping_url": "http://baidu.com",
+    "ping_url": "http://www.nbt.edu.cn/",
     //登录的URL缓存文件
     "cache": "url.txt"
 }
