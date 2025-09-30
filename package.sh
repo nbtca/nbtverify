@@ -1,12 +1,12 @@
 # compile for version
-make
+make -f Makefile.legacy
 if [ $? -ne 0 ]; then
     echo "make error"
     exit 1
 fi 
 
 # cross_compiles
-make -f ./Makefile.cross-compiles
+make -f ./Makefile.cross-compiles.legacy
 
 rm -rf ./release/packages
 mkdir -p ./release/packages

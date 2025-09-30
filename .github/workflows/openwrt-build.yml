@@ -1,0 +1,177 @@
+name: Build with OpenWrt SDK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            sdk_url_path: x86/64
+            runtime_test: true
+          - arch: aarch64_generic
+            sdk_url_path: armsr/armv8
+            runtime_test: false
+          - arch: mipsel_24kc
+            sdk_url_path: ramips/mt7621
+            runtime_test: false
+          - arch: arm_cortex-a9
+            sdk_url_path: bcm53xx/generic
+            runtime_test: false
+          - arch: mips_24kc
+            sdk_url_path: ath79/generic
+            runtime_test: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup variables
+        id: vars
+        run: |
+          SDK_URL_BASE="https://downloads.openwrt.org/releases/23.05.5/targets"
+          SDK_PATH="${{ matrix.sdk_url_path }}"
+          
+          # Fetch SDK filename from the index
+          SDK_FILE=$(curl -s "${SDK_URL_BASE}/${SDK_PATH}/" | \
+            grep -oE 'openwrt-sdk-[^"]+\.Linux-x86_64\.tar\.xz' | \
+            head -n 1)
+          
+          if [ -z "$SDK_FILE" ]; then
+            echo "Failed to fetch SDK filename"
+            exit 1
+          fi
+          
+          echo "sdk_url=${SDK_URL_BASE}/${SDK_PATH}/${SDK_FILE}" >> $GITHUB_OUTPUT
+          echo "sdk_file=${SDK_FILE}" >> $GITHUB_OUTPUT
+          echo "SDK URL: ${SDK_URL_BASE}/${SDK_PATH}/${SDK_FILE}"
+
+      - name: Cache OpenWrt SDK
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: openwrt-sdk
+          key: openwrt-sdk-${{ matrix.arch }}-23.05.5-${{ steps.vars.outputs.sdk_file }}
+
+      - name: Download and extract SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          wget -q ${{ steps.vars.outputs.sdk_url }}
+          tar xf ${{ steps.vars.outputs.sdk_file }}
+          mv openwrt-sdk-* openwrt-sdk
+
+      - name: Setup SDK
+        run: |
+          cd openwrt-sdk
+          
+          # Update feeds
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          
+          # Configure SDK
+          cat > .config <<EOF
+          CONFIG_PACKAGE_nbtverify=m
+          EOF
+          
+          make defconfig
+
+      - name: Copy package to SDK
+        run: |
+          mkdir -p openwrt-sdk/package/nbtverify
+          cp -r * openwrt-sdk/package/nbtverify/ 2>/dev/null || true
+          ls -la openwrt-sdk/package/nbtverify/
+
+      - name: Build package
+        run: |
+          cd openwrt-sdk
+          make package/nbtverify/compile V=s -j$(nproc)
+
+      - name: Find and collect packages
+        id: packages
+        run: |
+          cd openwrt-sdk
+          PACKAGE_DIR=$(find bin/ -type d -name "packages" | head -n 1)
+          if [ -z "$PACKAGE_DIR" ]; then
+            echo "Package directory not found, checking bin structure"
+            find bin/ -type f -name "*.ipk" || true
+            exit 1
+          fi
+          
+          mkdir -p ../artifacts
+          find bin/ -type f -name "nbtverify*.ipk" -exec cp {} ../artifacts/ \;
+          
+          echo "Collected packages:"
+          ls -lh ../artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nbtverify-${{ matrix.arch }}
+          path: artifacts/*.ipk
+          if-no-files-found: error
+
+      - name: Test package (x86_64 only)
+        if: matrix.runtime_test
+        run: |
+          cd artifacts
+          PKG=$(ls nbtverify*.ipk | head -n 1)
+          echo "Testing package: $PKG"
+          ar x "$PKG"
+          tar xzf data.tar.gz
+          
+          if [ -f ./usr/bin/nbtverify ]; then
+            echo "Binary found in package"
+            file ./usr/bin/nbtverify
+            ./usr/bin/nbtverify -h || true
+          else
+            echo "Binary not found in package"
+            exit 1
+          fi
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -name "*.ipk" -exec cp {} release/ \;
+          ls -lh release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*.ipk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

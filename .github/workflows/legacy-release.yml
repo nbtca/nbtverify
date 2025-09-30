@@ -1,7 +1,10 @@
-name: goreleaser
+name: Legacy Release (GoReleaser)
 
 on:
   push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
