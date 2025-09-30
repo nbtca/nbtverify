@@ -31,6 +31,10 @@ dist/
 .idea/
 .vscode/
 
+# OpenWrt SDK
+openwrt-sdk/
+*.ipk
+
 # Extra
 *.html
 /config.json
