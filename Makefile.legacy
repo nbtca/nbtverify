@@ -2,6 +2,8 @@ export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 LDFLAGS := -s -w
 
+.PHONY: all build fmt fmt-more vet nbtverify clean
+
 all: fmt build
 
 build: nbtverify
